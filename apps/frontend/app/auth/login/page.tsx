@@ -212,7 +212,7 @@ function PageLogin() {
                 }}
             >
                 <TextField disabled={loading || isFetching} onChange={handleInput("email")} value={form.email.value} id="email" label="email" variant="outlined" />
-                <TextField disabled={loading || isFetching} onChange={handleInput("password")} value={form.password.value} id="password" label="password" variant="outlined" />
+                <TextField disabled={loading || isFetching} onChange={handleInput("password")} value={form.password.value} id="password" type="password" label="password" variant="outlined" />
                 {
                     error &&
 
