@@ -1,10 +1,12 @@
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { boxStyle, containerStyle } from "./Style";
 
 export default function InitialLoading() {
     return (
         <Box sx={containerStyle}>
-            <Box sx={boxStyle}>
+            <Box sx={[boxStyle,{alignItems:'center',justifyContent:'center'}]}>
+                <CircularProgress />
+
                 <p>loading</p>
             </Box>
         </Box>
