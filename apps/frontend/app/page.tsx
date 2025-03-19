@@ -1,6 +1,9 @@
 'use client';
 
 import { checkStatus, fetchUserData, updateUserData } from "@/apis/userApi";
+import InitialLoading from "@/components/InitialLoading";
+import Offline from "@/components/Offline";
+import { boxStyle, containerStyle } from "@/components/Style";
 import { useAuth } from "@/lib/hook/useAuth";
 import { useLogoutUser } from "@/lib/hook/useLogoutUser";
 import { clearUser, updateUser } from "@/lib/store/slice/sliceUser";
@@ -30,7 +33,7 @@ function Home() {
 
 	const [isServerRunning, setServerRunning] = useState(false)
 	const [loadingCheckServer, setLoadingCheckServer] = useState(true)
-
+	const [initialLoading, setInitialLoading] = useState(true)
 	const [updateSuccess, setUpdateSuccess] = useState(false)
 
 	const [form, setForm] = useState<FormState>({
@@ -95,6 +98,7 @@ function Home() {
 			setServerRunning(false)
 			return false;
 		} finally {
+			setInitialLoading(false)
 			setLoadingCheckServer(false)
 		}
 	}
@@ -197,15 +201,12 @@ function Home() {
 		</Link>
 	);
 
-	if (!isServerRunning)
+	if (initialLoading)
 		return (
-			<Box sx={containerStyle}>
-				<Box sx={boxStyle}>
-					<Alert variant="filled" severity="error">
-						Server offline
-					</Alert>
-				</Box>
-			</Box>)
+			<InitialLoading />)
+
+	if (!isServerRunning)
+		return (<Offline/>)
 
 	return (
 		<Container>
@@ -222,24 +223,4 @@ function Home() {
 		</Container>
 	);
 }
-
-const containerStyle = {
-	height: '100vh',
-	display: 'flex',
-	justifyContent: 'center',
-	alignItems: 'center',
-	bgcolor: 'grey.100',
-	flexDirection: 'column',
-};
-
-const boxStyle = {
-	display: 'flex',
-	flexDirection: 'column',
-	width: 300,
-	gap: 2,
-	p: 2,
-	bgcolor: 'white',
-	borderRadius: 2,
-	boxShadow: 3,
-};
 export default Home

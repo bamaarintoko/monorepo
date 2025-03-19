@@ -1,10 +1,13 @@
 'use client'
 import { checkStatus, fetchUserData } from "@/apis/userApi";
+import InitialLoading from "@/components/InitialLoading";
+import Offline from "@/components/Offline";
 import { cekEmpty } from "@/lib/functions";
 import withNoAuth from "@/lib/hoc/withNoAuth";
 import { useLoginWithUsernameOrEmail } from "@/lib/hook/useLoginWithUsernameOrEmail";
 import { updateData, updateToken, updateUser } from "@/lib/store/slice/sliceUser";
 import { Alert, Box, Button, TextField } from "@mui/material";
+import { useRouter } from "next/navigation";
 import { ChangeEvent, Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -22,7 +25,9 @@ function PageLogin() {
     const [login, { data, loading, error }] = useLoginWithUsernameOrEmail()
     const [isFetching, setIsFetching] = useState(false)
     const [isServerRunning, setServerRunning] = useState(false)
+    const [initialLoading, setInitialLoading] = useState(true)
     const [loadingCheckServer, setLoadingCheckServer] = useState(true)
+
     const [form, setForm] = useState<FormState>({
         email: {
             value: '',
@@ -36,19 +41,20 @@ function PageLogin() {
         },
     })
     const dispatch = useDispatch()
+    const router = useRouter()
 
     useEffect(() => {
-        if (data) {
+        if (data) { // condition after success firebase login
             dispatch(updateToken(data.accessToken))
             fetchUserInfo()
         }
     }, [data])
 
-    useEffect(() => {
+    useEffect(() => { // check srver 1st
         check()
     }, [])
 
-    const check = async () => {
+    const check = async () => { // function for check server
         try {
             await checkStatus()
             setServerRunning(true)
@@ -58,6 +64,7 @@ function PageLogin() {
             return false;
         } finally {
             setLoadingCheckServer(false)
+            setInitialLoading(false)
         }
     }
 
@@ -102,7 +109,6 @@ function PageLogin() {
 
 
     const handleLogin = async () => {
-        // setIsLoading(true)
         const hasError = cekEmpty(form)
         const isServerUp = await check();
 
@@ -176,62 +182,11 @@ function PageLogin() {
         return hasErrors;
     };
 
-    const renderOfflineServer = () => ( // server running
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column', // Column layout for TextFields
-                width: '300px', // Fixed width
-                gap: 2, // Space between TextFields
-                padding: 2, // Optional padding
-                backgroundColor: 'white', // Optional for contrast
-                borderRadius: 2, // Rounded corners (optional)
-                boxShadow: 3, // Optional shadow for elevation
-            }}
-        >
-            <Alert variant="filled" severity="error">
-                Server offline
-            </Alert>
-        </Box>
-    )
+    if (initialLoading) // check server 1st
+        return (<InitialLoading />)
 
-
-    const renderOnlineServer = () => ( // server not running 
-        <Box
-            sx={{
-                display: 'flex',
-                flexDirection: 'column', // Column layout for TextFields
-                width: '300px', // Fixed width
-                gap: 2, // Space between TextFields
-                padding: 2, // Optional padding
-                backgroundColor: 'white', // Optional for contrast
-                borderRadius: 2, // Rounded corners (optional)
-                boxShadow: 3, // Optional shadow for elevation
-            }}
-        >
-            <TextField disabled={loading || isFetching} onChange={handleInput("email")} value={form.email.value} id="email" label="email" variant="outlined" />
-            <TextField disabled={loading || isFetching} onChange={handleInput("password")} value={form.password.value} id="password" label="password" variant="outlined" />
-            {
-                error &&
-
-                <Alert severity="warning">{error}</Alert>
-            }
-            <Button loading={loading || isFetching}
-                loadingPosition="start" onClick={handleLogin} variant="contained">Login</Button>
-        </Box>
-    )
-
-    if (loadingCheckServer) // check server 1st
-        return (<Box
-            sx={{
-                height: '100vh', // Full screen height
-                width: '100vw',  // Full screen width (optional)
-                display: 'flex', // Flexbox
-                justifyContent: 'center', // Center horizontally
-                alignItems: 'center', // Center vertically
-                backgroundColor: 'grey.100', // Optional background color
-            }}
-        ><p>loading</p></Box>)
+    if (!isServerRunning)
+        return (<Offline />)
 
     return (
         <Box
@@ -244,7 +199,31 @@ function PageLogin() {
                 backgroundColor: 'grey.100', // Optional background color
             }}
         >
-            {isServerRunning ? renderOnlineServer() : renderOfflineServer()}
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column', // Column layout for TextFields
+                    width: '300px', // Fixed width
+                    gap: 2, // Space between TextFields
+                    padding: 2, // Optional padding
+                    backgroundColor: 'white', // Optional for contrast
+                    borderRadius: 2, // Rounded corners (optional)
+                    boxShadow: 3, // Optional shadow for elevation
+                }}
+            >
+                <TextField disabled={loading || isFetching} onChange={handleInput("email")} value={form.email.value} id="email" label="email" variant="outlined" />
+                <TextField disabled={loading || isFetching} onChange={handleInput("password")} value={form.password.value} id="password" label="password" variant="outlined" />
+                {
+                    error &&
+
+                    <Alert severity="warning">{error}</Alert>
+                }
+                <Button loading={loading || isFetching}
+                    loadingPosition="start" onClick={handleLogin} variant="contained">Login</Button>
+                <Button loading={loading || isFetching}
+                    loadingPosition="start" onClick={()=>router.push('register')} variant="contained">Register</Button>
+            </Box>
+            {/* {isServerRunning ? renderOnlineServer() : renderOfflineServer()} */}
         </Box>
     )
 }
